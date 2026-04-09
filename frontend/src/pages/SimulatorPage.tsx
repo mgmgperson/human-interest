@@ -135,10 +135,10 @@ export default function SimulatorPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-slate-900">Concurrent Transaction Simulator</h1>
         <p className="text-slate-500 text-sm mt-1.5 max-w-2xl">
-          Fires two purchase requests simultaneously via{' '}
-          <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-xs">Promise.allSettled</code>.
-          SQLite's <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-xs">BEGIN IMMEDIATE</code>{' '}
-          serializes writes at the DB level, ensuring the balance never goes negative.
+          Configure two purchases and fire them simultaneously. The first to acquire a write
+          lock wins; the second reads the committed balance and decides from there.
+          See <code className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-xs">architecture.md</code> for
+          how concurrent writes are handled.
         </p>
       </div>
 
@@ -246,29 +246,11 @@ export default function SimulatorPage() {
             <ResultCard label="Transaction B" result={resultB} />
           </div>
 
-          {/* Explanation banner */}
+          {/* Updated balance after race */}
           {selectedAccount && (
-            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
-                  <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-indigo-900 mb-1">How concurrency was handled</p>
-                  <p className="text-sm text-indigo-700 leading-relaxed">
-                    Both requests arrived at the server nearly simultaneously. SQLite's{' '}
-                    <code className="font-mono bg-indigo-100 px-1 rounded text-xs">BEGIN IMMEDIATE</code>{' '}
-                    acquired an exclusive write lock for the first transaction that was processed,
-                    forcing the second to wait. When the second ran, it read the{' '}
-                    <strong>committed</strong> balance — not the stale pre-transaction value —
-                    and made the correct approval/decline decision.
-                    Updated balance: <strong>{formatCents(selectedAccount.balance)}</strong>.
-                  </p>
-                </div>
-              </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+              <span className="text-sm text-slate-500">Updated balance</span>
+              <span className="text-xl font-bold text-slate-900">{formatCents(selectedAccount.balance)}</span>
             </div>
           )}
         </div>
